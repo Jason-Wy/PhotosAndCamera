@@ -410,18 +410,24 @@ static NSString *const _identifier = @"toolBarThumbCollectionViewCell";
 - (void) pickerCollectionCellTouchedIndexPath:(NSIndexPath *)indexPath
 {
     if (indexPath.row == 0&&indexPath.section == 0) {
-            ZLCameraViewController *cameraVC = [[ZLCameraViewController alloc] init];
-            // 拍照最多个数
-            cameraVC.maxCount = 1;
-            // 单拍
+        ZLCameraViewController *cameraVC = [[ZLCameraViewController alloc] init];
+        // 拍照最多个数
+        cameraVC.maxCount = self.maxCount;
+        // 单拍
+        if (self.maxCount >1) {
+            cameraVC.cameraType = ZLCameraContinuous;
+        }else
+        {
             cameraVC.cameraType = ZLCameraSingle;
-            cameraVC.callback = ^(NSArray *cameras){
-                //在这里得到拍照结果
-                NSLog(@"拍照结果，单张");
-                [[NSNotificationCenter defaultCenter]postNotificationName:LGCameraSingleNotification object:nil userInfo:[NSDictionary dictionaryWithObjectsAndKeys:cameras,@"result", nil]];
-            };
+        }
+        cameraVC.callback = ^(NSArray *cameras){
+            //在这里得到拍照结果
+            NSLog(@"拍照结果，单张");
+            [[NSNotificationCenter defaultCenter]postNotificationName:LGCameraSingleOrContinuousNotification object:nil userInfo:[NSDictionary dictionaryWithObjectsAndKeys:cameras,@"result", nil]];
+        };
+
+        [self.navigationController setNavigationBarHidden:YES];
         [self.navigationController pushViewController:cameraVC animated:YES];
-//            [cameraVC showPickerVc:self];
         
     }else
     {

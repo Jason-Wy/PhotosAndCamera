@@ -27,14 +27,23 @@
 
 - (void)viewDidLoad {
     
-    UIButton *confirmButton = [[UIButton alloc]initWithFrame:CGRectMake(10, 100, 200, 44)];
+    UIButton *confirmButton = [[UIButton alloc]initWithFrame:CGRectMake(10, 100, 140, 44)];
     confirmButton.backgroundColor = [UIColor redColor];
     [confirmButton setBackgroundImage:[UIImage imageNamed:@"person-button-noround"] forState:UIControlStateNormal];
-    [confirmButton setTitle:@"确认保存" forState:UIControlStateNormal];
+    [confirmButton setTitle:@"进入图库" forState:UIControlStateNormal];
     [confirmButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [confirmButton addTarget:self action:@selector(confirmButtonAction:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:confirmButton];
     
+    
+    UIButton *changeButton = [[UIButton alloc]initWithFrame:CGRectMake(160, 100, 140, 44)];
+    changeButton.backgroundColor = [UIColor redColor];
+    [changeButton setBackgroundImage:[UIImage imageNamed:@"person-button-noround"] forState:UIControlStateNormal];
+    [changeButton setTitle:@"选择照相" forState:UIControlStateNormal];
+    [changeButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [changeButton addTarget:self action:@selector(changeButtonAction:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:changeButton];
+
     
     //设置照相通知
     [self addObservers];
@@ -44,44 +53,90 @@
 {
     [super viewWillAppear:animated];
     
-    for (UIView *obj in self.view.subviews) {
-        if ([obj isKindOfClass:[UIImageView class]]) {
-            [obj removeFromSuperview];
-        }
-    }
 }
 
 - (void)addObservers{
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(receiveCameraSingleResult)
-                                                 name:LGCameraSingleNotification
-                                               object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(receiveCameraContinuous)
-                                                 name:LGCameraContinuousNotification
+                                             selector:@selector(receiveCameraSingleOrContinuousNotificationResult:)
+                                                 name:LGCameraSingleOrContinuousNotification
                                                object:nil];
     
 }
 
-- (void)receiveCameraSingleResult
+- (void)receiveCameraSingleOrContinuousNotificationResult:(NSNotification *)notification
 {
-    NSLog(@"dddddd");
+    NSDictionary *dict = [notification userInfo];
+    NSLog(@"dict %@",dict);
+    NSArray *resultArray = [dict objectForKey:@"result"];
+    if (resultArray != nil&&resultArray.count != 0) {
+        
+        for (UIView *obj in self.view.subviews) {
+            if ([obj isKindOfClass:[UIImageView class]]) {
+                [obj removeFromSuperview];
+            }
+        }
+        
+        int i = 0;
+        for (ZLCamera *zlPhoto in resultArray) {
+            
+            [self creatImageView:i WithImage:zlPhoto.photoImage];
+            
+            i = i+1;
+        }
+    }
+    
 }
 
-- (void)receiveCameraContinuous
-{
-    NSLog(@"3333333");
-}
 
 - (void)confirmButtonAction:(UIButton *)sender
 {
     //相册，但是相册有几种不同的类型
     [self presentPhotoPickerViewControllerWithStyle:LGShowImageTypeImageURL];
-    //照相，单张
-//    [self presentCameraSingle];
-    //照相，多张
-//    [self presentCameraContinuous];
+}
+
+- (void)changeButtonAction:(UIButton *)sender
+{
+    [self presentCameraSingle];
+//    UIActionSheet *sheetAction = [[UIActionSheet alloc]initWithTitle:@"选择相册或者照相" delegate:self cancelButtonTitle:@"取消" destructiveButtonTitle:@"可以选择一张或者多张照片，最多可以选择9张，但是连拍会出现内存过大的问题！" otherButtonTitles:@"单张照相",@"多张照相",@"选择照片选择器",@"选择照片浏览器",@"选择网络图片浏览器", nil];
+//    [sheetAction showInView:self.view];
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    switch (buttonIndex) {
+        case 1:
+        {
+            [self presentCameraSingle];
+        }
+            break;
+        case 2:
+        {
+            
+            [self presentCameraContinuous];
+        }
+            break;
+        case 3:
+        {
+            [self presentPhotoPickerViewControllerWithStyle:LGShowImageTypeImagePicker];
+        }
+            break;
+        case 4:
+        {
+            
+            [self presentPhotoPickerViewControllerWithStyle:LGShowImageTypeImageBroswer];
+        }
+            break;
+        case 5:
+        {
+            
+            [self presentPhotoPickerViewControllerWithStyle:LGShowImageTypeImageURL];
+        }
+            break;
+
+            
+        default:
+            break;
+    }
 }
 
 - (void)didReceiveMemoryWarning {
@@ -119,7 +174,7 @@
     cameraVC.cameraType = ZLCameraSingle;
     cameraVC.callback = ^(NSArray *cameras){
         //在这里得到拍照结果
-        NSLog(@"拍照结果，单张");
+        [[NSNotificationCenter defaultCenter]postNotificationName:LGCameraSingleOrContinuousNotification object:nil userInfo:[NSDictionary dictionaryWithObjectsAndKeys:cameras,@"result", nil]];
     };
     [cameraVC showPickerVc:self];
 }
@@ -132,7 +187,7 @@
     cameraVC.cameraType = ZLCameraContinuous;
     cameraVC.callback = ^(NSArray *cameras){
         //在这里得到拍照结果
-        NSLog(@"拍照结果,多张");
+        [[NSNotificationCenter defaultCenter]postNotificationName:LGCameraSingleOrContinuousNotification object:nil userInfo:[NSDictionary dictionaryWithObjectsAndKeys:cameras,@"result", nil]];
     };
     [cameraVC showPickerVc:self];
 }
@@ -140,6 +195,13 @@
 
 #pragma mark - LGPhotoPickerViewControllerDelegate
 - (void)pickerViewControllerDoneAsstes:(NSArray *)assets isOriginal:(BOOL)original{
+    
+    //消除原来的imageView
+    for (UIView *obj in self.view.subviews) {
+        if ([obj isKindOfClass:[UIImageView class]]) {
+            [obj removeFromSuperview];
+        }
+    }
     
     int i = 0;
     for (LGPhotoAssets *lgAsset in assets) {

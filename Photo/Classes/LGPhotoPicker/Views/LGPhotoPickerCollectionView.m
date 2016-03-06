@@ -131,6 +131,7 @@
     LGPhotoAssets *asset = self.dataArray[indexPath.item];
     LGPhotoPickerImageView *pickerImageView = [cell.contentView.subviews objectAtIndex:0];
     // 如果没有就添加到数组里面，存在就移除
+    NSLog(@"111111111");
     if ([pickerImageView isKindOfClass:[LGPhotoPickerImageView class]] && pickerImageView.isMaskViewFlag) {
         [self.selectAssets removeObject:asset];
         [self.lastDataArray removeObject:asset];
@@ -150,17 +151,24 @@
         [self.selectAssets addObject:asset];
         [self.lastDataArray addObject:asset];
     }
-    // 告诉代理现在被点击了!
+    NSLog(@"22222222222");
+    //告诉代理现在被点击了!
     if ([self.collectionViewDelegate respondsToSelector:@selector(pickerCollectionViewDidSelected: deleteAsset:)]) {
+        NSLog(@"pickerImageView  %d",pickerImageView.isMaskViewFlag);
         if (pickerImageView.isMaskViewFlag) {
-            // 删除的情况下
+            //删除的情况下
+            
+            NSLog(@"删除");
             [self.collectionViewDelegate pickerCollectionViewDidSelected:self deleteAsset:asset];
         }else{
+            NSLog(@"选择中");
             [self.collectionViewDelegate pickerCollectionViewDidSelected:self deleteAsset:nil];
         }
+        NSLog(@"33333333333");
     }
     
     pickerImageView.maskViewFlag = ([pickerImageView isKindOfClass:[LGPhotoPickerImageView class]]) && !pickerImageView.isMaskViewFlag;
+    NSLog(@"444444444");
 }
 
 #pragma mark -<UICollectionViewDataSource>
@@ -182,7 +190,9 @@
             [control removeFromSuperview];//消除重复被用的背景
         }
         cell.backgroundColor = [UIColor whiteColor];
-        UIImageView *cellImgView = [[UIImageView alloc]initWithFrame:cell.bounds];
+        CGRect imageRect = CGRectMake(0, 0, cell.bounds.size.width/2, cell.bounds.size.height/2);
+        UIImageView *cellImgView = [[UIImageView alloc]initWithFrame:imageRect];
+        cellImgView.center = cell.center;
         cellImgView.image = [UIImage imageNamed:@"xiqngji.png"];
         [cell.contentView addSubview:cellImgView];
         [cellImgView bringSubviewToFront:cell];

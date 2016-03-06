@@ -57,7 +57,7 @@ typedef NS_ENUM(NSInteger, DraggingDirect) {
 {
     _showType = showType;
     if (self.showType != LGShowImageTypeImagePicker){
-        self.needHidenBar = YES;
+        self.needHidenBar = NO;//设置成NO后，单击不能退出，，YES可以退出
     }
 }
 

@@ -15,8 +15,7 @@
 #define LGPhotoImageDidFinishLoad @"LGPhotoImageDidFinishLoad"
 #define LGPhotoImageDidFailLoadWithError @"LGPhotoImageDidFailLoadWithError"
 
-#define LGCameraSingleNotification @"LGCameraSingleNotification"
-#define LGCameraContinuousNotification @"LGCameraContinuousNotification"
+#define LGCameraSingleOrContinuousNotification @"LGCameraSingleOrContinuousNotification"
 
 
 @protocol LGPhotoPickerBrowserPhoto <NSObject>

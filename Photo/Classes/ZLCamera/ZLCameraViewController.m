@@ -355,6 +355,7 @@ static CGFloat BOTTOM_HEIGHT = 60;
          camera.photoImage = t_image;
          camera.thumbImage = [UIImage imageWithData:data];
          
+         //FIXME:保存照片
          if (self.cameraType == ZLCameraSingle) {
              [self.images removeAllObjects];//由于当前只需要一张图片2015-11-6
              [self.images addObject:camera];
@@ -619,9 +620,33 @@ static CGFloat BOTTOM_HEIGHT = 60;
 {
     //关闭相册界面
     if(self.callback){
+        //TODO:把照片保存到相册里面
+        for (ZLCamera *camera in self.images) {
+            UIImageWriteToSavedPhotosAlbum(camera.photoImage, self, @selector(image:didFinishSavingWithError:contextInfo:), NULL);
+        }
         self.callback(self.images);
     }
     [self cancel:nil];
 }
+
+
+- (void)image: (UIImage *) image didFinishSavingWithError: (NSError *) error contextInfo: (void *) contextInfo
+{
+    NSString *msg = nil;
+    if(error != NULL){
+        msg = @"保存图片失败" ;
+    }else{
+        msg = @"保存图片成功";
+    }
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"保存图片结果提示"
+                                                    message:msg
+                                                   delegate:self
+                                          cancelButtonTitle:@"确定"
+                                          otherButtonTitles:nil];
+    [alert show];
+    
+}
+
 @end
 
